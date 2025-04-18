@@ -1,10 +1,9 @@
 import os
 import json
 import cv2
-import asyncio
 from datetime import datetime
 from ultralytics import YOLO
-from agents import filter_agent
+from app.core.agents import filter_agent
 
 # Config Paths
 CAPTURED_IMAGES_DIR = "static/captured"
@@ -94,12 +93,3 @@ async def run_detection_on_video(video_path: str, situation: str, model_path: st
 
     cap.release()
     cv2.destroyAllWindows()
-
-
-# Example usage for debugging
-if __name__ == "__main__":
-    video_file = "input.mp4"
-    prompt = "I'm in a room with 4 fuckers"
-
-    reset_captured_data()
-    asyncio.run(run_detection_on_video(video_file, prompt))
