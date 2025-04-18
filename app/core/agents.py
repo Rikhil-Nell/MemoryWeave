@@ -44,6 +44,9 @@ Use this information to personalize your replies:
 
 """
 
+with open("filter_agent_prompt.txt", "r") as file:
+    filter_agent_prompt = file.read()
+
 # Setting up Agent
 journal_agent = Agent(
     model=cerebras_model,
@@ -51,5 +54,12 @@ journal_agent = Agent(
     system_prompt=journal_system_prompt,
     retries=1,
 )
+
+filter_agent = Agent(
+    model=cerebras_model,
+    model_settings=cerebras_openai_settings,
+    system_prompt=filter_agent_prompt,
+    retries=1,
+    )
 
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
