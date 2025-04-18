@@ -21,31 +21,13 @@ cerebras_openai_settings = OpenAIModelSettings(
 cerebras_model_name = "llama-3.3-70b"
 
 # Setting Client Up
-cerebras_client = openai.AsyncOpenAI(api_key=settings.CEREBRAS_API_KEY, base_url="https://api.cerebras.ai/v1")
+cerebras_client = openai.AsyncOpenAI(
+    api_key=settings.CEREBRAS_API_KEY, base_url="https://api.cerebras.ai/v1")
 
 # Cerebras Model
 cerebras_model = OpenAIModel(
     model_name=cerebras_model_name,
     provider=OpenAIProvider(openai_client=cerebras_client),
-)
-
-# Validation Models
-class Memory(BaseModel):
-    date: str
-    objects_seen: List[str]
-    summary: str
-
-class MemoryContext(BaseModel):
-    memories: List[Memory]
-
-# Objects Detected by YOLO
-memories = [
-    Memory(date="2025-04-01", objects_seen=["cat", "sofa", "sunlight"], summary="A cozy afternoon with a cat lounging."),
-]
-
-# Converting to a string
-memories_text = "\n".join(
-    f"On {m.date}, you saw {', '.join(m.objects_seen)}. Summary: {m.summary}" for m in memories
 )
 
 # System Prompt
@@ -60,12 +42,11 @@ The final output should be at least 300 words, immersive, and poetic when needed
 
 Use this information to personalize your replies:
 
-{memories_text}
 """
 
 # Setting up Agent
 journal_agent = Agent(
-    model = cerebras_model,
+    model=cerebras_model,
     model_settings=cerebras_openai_settings,
     system_prompt=journal_system_prompt,
     retries=1,

@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Form
 from gotrue.types import User
 
 from app.core.supabase import supabase
@@ -12,7 +12,11 @@ video_router = APIRouter()
 
 
 @video_router.post("/upload")
-async def upload_video(file: UploadFile = File(...), user: User = Depends(get_current_user)):
+async def upload_video(
+    prompt: str = Form(...),
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
     try:
         if not file.content_type.startswith("video/"):
             raise HTTPException(status_code=400, detail="Invalid file type")
@@ -31,7 +35,7 @@ async def upload_video(file: UploadFile = File(...), user: User = Depends(get_cu
         objects = ""
 
         supabase.table("timeline").insert(
-            {"video_id": response.data[0]["id"], "story": (await journal_agent.run(f"Generate a Journal Entry for the Objects: {objects}")).output}).execute()
+            {"video_id": response.data[0]["id"], "story": (await journal_agent.run(f"prompt -> {prompt}: objects -> {objects}")).output}).execute()
 
         return {"filename": filename, "message": "story cooked successfully"}
     except Exception as e:
