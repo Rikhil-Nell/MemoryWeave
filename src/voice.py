@@ -6,7 +6,7 @@ from livekit.agents.llm import (
     ChatContext,
     ChatMessage,
 )
-from livekit.agents.voice_assistant import VoiceAssistant
+from livekit.agents import AgentSession, Agent, RoomInputOptions
 from livekit.plugins import deepgram, silero, cartesia, openai
 
 from dotenv import load_dotenv
@@ -28,7 +28,7 @@ async def entrypoint(ctx: JobContext):
         ]
     )
 
-    assistant = VoiceAssistant(
+    assistant = AgentSession(
         vad=ctx.proc.userdata["vad"],
         stt=deepgram.STT(),
         llm=openai.LLM(
@@ -39,6 +39,9 @@ async def entrypoint(ctx: JobContext):
         tts=cartesia.TTS(voice="248be419-c632-4f23-adf1-5324ed7dbf1d"),
         chat_ctx=initial_ctx,
     )
+    
+    
+    
 
     await ctx.connect()
     assistant.start(ctx.room)
