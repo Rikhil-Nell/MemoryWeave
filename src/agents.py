@@ -5,11 +5,8 @@ from pydantic_ai.models.openai import OpenAIModelSettings, OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic import BaseModel
 import openai
-import asyncio
 from load_api import Settings
-
-# from supabase import create_async_client, AsyncClient
-# from dataclasses import dataclass
+from supabase import create_client, Client
 
 settings = Settings()
 
@@ -26,13 +23,11 @@ cerebras_model_name = "llama-3.3-70b"
 # Setting Client Up
 cerebras_client = openai.AsyncOpenAI(api_key=settings.CEREBRAS_API_KEY, base_url="https://api.cerebras.ai/v1")
 
-
 # Cerebras Model
 cerebras_model = OpenAIModel(
     model_name=cerebras_model_name,
     provider=OpenAIProvider(openai_client=cerebras_client),
 )
-
 
 # Validation Models
 class Memory(BaseModel):
@@ -43,74 +38,37 @@ class Memory(BaseModel):
 class MemoryContext(BaseModel):
     memories: List[Memory]
 
-
-# Needs to be updated through YOLO IMG Detection
+# Objects Detected by YOLO
 memories = [
     Memory(date="2025-04-01", objects_seen=["cat", "sofa", "sunlight"], summary="A cozy afternoon with a cat lounging."),
-    Memory(date="2025-04-10", objects_seen=["books", "coffee"], summary="Reading session in the morning."),
 ]
-
 
 # Converting to a string
 memories_text = "\n".join(
     f"On {m.date}, you saw {', '.join(m.objects_seen)}. Summary: {m.summary}" for m in memories
 )
 
-
 # System Prompt
-system_prompt = f"""
-You need to create a journal like story for each object detected at an event. Here's what the user has experienced recently:
-{memories_text}
+journal_system_prompt = f"""
+You are a thoughtful and introspective journaling assistant. Your job is to take a list of objects detected in the user’s environment and craft a long, vivid, and emotionally resonant journal entry around them. You must assume the perspective of a reflective human who notices these objects and connects them to their thoughts, memories, or current events in their day.
 
-Use this information to personalize your replies.
+Each entry should feel personal and flow like a genuine journal. Use descriptive language, inner monologue, and narrative elements. The story should be centered around the objects given, either by encountering them during the day, associating them with past memories, or integrating them into a stream-of-consciousness reflection.
+
+You should never list the objects directly; instead, weave them naturally into the narrative. Make the entry feel as if it were written by a person who is using journaling as a tool to understand their thoughts and emotions.
+
+The final output should be at least 300 words, immersive, and poetic when needed. Do not include headings or formatting — only the journal content.
+
+Use this information to personalize your replies:
+
+{memories_text}
 """
 
 # Setting up Agent
-agent = Agent(
+journal_agent = Agent(
     model = cerebras_model,
     model_settings=cerebras_openai_settings,
-    system_prompt=system_prompt,
-    retries=2,
+    system_prompt=journal_system_prompt,
+    retries=1,
 )
 
-# Testing the Agent's Function
-user_input = 'Provide the journal'
-response = asyncio.run(agent.run(user_input))
-print(response.data)
-
-
-class Return(BaseModel):
-    pass
-
-
-# Dataclass for DB AGENT
-# @dataclass
-# class Deps:
-#     supabase_url: str = settings.supabase_url
-#     supabase_key: str = settings.supabase_key
-#     supabase_client: AsyncClient = create_async_client(supabase_url, supabase_key)
-
-# with open("prompts/database_agent_prompt.txt", "r") as file:
-#     database_agent_prompt = file.read()
-
-# with open("prompts/report_agent_prompt.txt", "r") as file:
-#     report_agent_prompt = file.read()
-
-# with open("prompts/call_log_agent_prompt.txt", "r") as file:
-#     call_log_agent_prompt = file.read()
-
-# database_agent = Agent(
-#     model=cerebras_model,
-#     model_settings=cerebras_openai_settings,
-#     system_prompt=database_agent_prompt,
-#     retries=3,
-#     result_type=Return
-# )
-
-
-# call_log_agent = Agent(
-#     model=cerebras_model,
-#     model_settings=cerebras_openai_settings,
-#     system_prompt=call_log_agent_prompt,
-#     retries=3,
-# )
+supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
