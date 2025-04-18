@@ -7,6 +7,10 @@ requires-python = ">=3.13"
 dependencies = [
     "livekit>=1.0.6",
     "livekit-agents>=1.0.13",
+    "livekit-plugins-cartesia>=1.0.13",
+    "livekit-plugins-deepgram>=1.0.13",
+    "livekit-plugins-openai>=1.0.13",
+    "livekit-plugins-silero>=1.0.13",
     "pydantic>=2.11.3",
     "pydantic-ai>=0.1.2",
     "pydantic-settings>=2.8.1",
