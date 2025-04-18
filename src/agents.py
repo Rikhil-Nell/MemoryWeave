@@ -28,11 +28,8 @@ cerebras_model = OpenAIModel(
     provider=OpenAIProvider(openai_client=cerebras_client),
 )
 
-class Form(BaseModel):
-    caller_name: str = Field(description="The name of the caller making the request if given, else leave it empty")
-    request_type: str = Field(description="The type of request being made out of the list: [technical support, billing, new connection]")
-    issue_summary: str = Field(description="Detailed description of 50 lines of the issue being reported by the caller")
-    customer_sentiment: str = Field(description="The emotion of the customer to be given in one word out of the list: [happy, sad, angry, frustrated]")
+class Return(BaseModel):
+    pass
 
 @dataclass
 class Deps:
@@ -54,7 +51,7 @@ database_agent = Agent(
     model_settings=cerebras_openai_settings,
     system_prompt=database_agent_prompt,
     retries=3,
-    result_type=Form
+    result_type=Return
 )
 
 call_log_agent = Agent(
