@@ -6,18 +6,10 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "livekit>=1.0.6",
-<<<<<<< HEAD
-=======
     "livekit-agents>=1.0.13",
-    "livekit-plugins-cartesia>=1.0.13",
-    "livekit-plugins-deepgram>=1.0.13",
-    "livekit-plugins-openai>=1.0.13",
-    "livekit-plugins-silero>=1.0.13",
->>>>>>> master
     "pydantic>=2.11.3",
     "pydantic-ai>=0.1.2",
     "pydantic-settings>=2.8.1",
     "supabase>=2.15.0",
     "together>=1.5.5",
-    "ultralytics>=8.3.111",
 ]
