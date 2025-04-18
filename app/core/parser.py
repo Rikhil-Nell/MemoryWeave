@@ -3,7 +3,7 @@ import json
 import cv2
 from datetime import datetime
 from ultralytics import YOLO
-from app.core.agents import filter_agent
+from app.core.agents import filter_agent, journal_agent
 
 # Config Paths
 CAPTURED_IMAGES_DIR = "static/captured"
@@ -37,7 +37,8 @@ def save_detections(image, detections, class_names):
         conf = float(det.conf[0])
 
         if conf > 0.7 and (class_id not in highest_conf_per_class or conf > highest_conf_per_class[class_id]["conf"]):
-            highest_conf_per_class[class_id] = {"conf": conf, "image": image.copy()}
+            highest_conf_per_class[class_id] = {
+                "conf": conf, "image": image.copy()}
             detected_class_ids.add(class_id)
 
     if not highest_conf_per_class:
@@ -51,7 +52,8 @@ def save_detections(image, detections, class_names):
 
     for class_id, data in highest_conf_per_class.items():
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-        image_path = os.path.join(CAPTURED_IMAGES_DIR, f"class_{class_id}_{timestamp}.jpg")
+        image_path = os.path.join(
+            CAPTURED_IMAGES_DIR, f"class_{class_id}_{timestamp}.jpg")
         cv2.imwrite(image_path, data["image"])
         image_log[class_id] = {"path": image_path, "conf": data["conf"]}
 
@@ -59,7 +61,8 @@ def save_detections(image, detections, class_names):
         json.dump(image_log, f, indent=4)
 
     # Update class names file
-    new_names = [class_names[cid] for cid in detected_class_ids if cid < len(class_names)]
+    new_names = [class_names[cid]
+                 for cid in detected_class_ids if cid < len(class_names)]
 
     try:
         with open(CLASS_NAMES_FILE, "r") as f:
@@ -77,7 +80,8 @@ async def run_detection_on_video(video_path: str, situation: str, model_path: st
     all_class_names = list(model.names.values())
 
     valid_class_names = await get_valid_classes(situation)
-    selected_indices = [i for i, name in enumerate(all_class_names) if name.lower() in valid_class_names]
+    selected_indices = [i for i, name in enumerate(
+        all_class_names) if name.lower() in valid_class_names]
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -93,3 +97,20 @@ async def run_detection_on_video(video_path: str, situation: str, model_path: st
 
     cap.release()
     cv2.destroyAllWindows()
+
+
+async def summarize_detected_objects(video_path: str, situation: str) -> str:
+    await run_detection_on_video(video_path, situation)
+
+    try:
+        with open(CLASS_NAMES_FILE, "r") as f:
+            detected_objects = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return "No detected objects to summarize."
+
+    if not detected_objects:
+        return "No relevant objects found."
+
+    object_list = ", ".join(detected_objects)
+    response = await journal_agent.run(user_prompt=object_list)
+    return response

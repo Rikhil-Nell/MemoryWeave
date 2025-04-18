@@ -7,6 +7,7 @@ from app.core.supabase import supabase
 from app.deps.auth import get_current_user
 from app.core.constants import UPLOAD_DIR, PROJECT_PATH
 from app.core.agents import journal_agent
+from app.core.parser import summarize_detected_objects
 
 video_router = APIRouter()
 
@@ -31,12 +32,10 @@ async def upload_video(
         response = supabase.table("video").insert(
             {"user_id": user.id, "file_location": f"{PROJECT_PATH}\\videos\\{filename}"}).execute()
 
-        # call yolo
-        objects = ""
-
         supabase.table("timeline").insert(
-            {"video_id": response.data[0]["id"], "story": (await journal_agent.run(f"prompt -> {prompt}: objects -> {objects}")).output}).execute()
+            {"video_id": response.data[0]["id"], "story": (await summarize_detected_objects(response.data[0]["file_location"], prompt)).output}).execute()
 
         return {"filename": filename, "message": "story cooked successfully"}
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")

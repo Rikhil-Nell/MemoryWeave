@@ -1,6 +1,5 @@
-import os
-import sys
+from pathlib import Path
 
 UPLOAD_DIR = "videos"
 
-PROJECT_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
+PROJECT_PATH = str(Path(__file__).resolve().parent.parent).replace("\\app", "")

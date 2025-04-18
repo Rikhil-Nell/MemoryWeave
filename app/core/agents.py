@@ -44,8 +44,29 @@ Use this information to personalize your replies:
 
 """
 
-with open("filter_agent_prompt.txt", "r") as file:
-    filter_agent_prompt = file.read()
+filter_agent_prompt = """
+You are an agent when given an input, usually about the user's experience of visiting a location.
+Typically an environment which contains objects.
+Provide a list of string of objects which could typically be found in this environment
+which can be detected by the YOLO Object detection model and is relevant to the coco8 dataset.
+
+These objects include but are not limited to: 
+[
+    "person", "bicycle", "car", "motorcycle", "airplane", "bs", "train", "trck", "boat", 
+    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", 
+    "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", 
+    "backpack", "mbrella", "handbag", "tie", "sitcase", "frisbee", "skis", "snowboard", 
+    "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "srfboard", 
+    "tennis racket", "bottle", "wine glass", "cp", "fork", "knife", "spoon", "bowl", 
+    "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", 
+    "dont", "cake", "chair", "coch", "potted plant", "bed", "dining table", "toilet", 
+    "tv", "laptop", "mose", "remote", "keyboard", "cell phone", "microwave", "oven", 
+    "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", 
+    "hair drier", "toothbrsh"
+]
+
+Your output should consist of 10 objects and it should be a string of comma separated words ONLY.
+"""
 
 # Setting up Agent
 journal_agent = Agent(
@@ -60,6 +81,6 @@ filter_agent = Agent(
     model_settings=cerebras_openai_settings,
     system_prompt=filter_agent_prompt,
     retries=1,
-    )
+)
 
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)

@@ -3,3 +3,7 @@ videos/
 .env
 __pycache__
 .vscode/
+
+*.json
+*.pt
+static/

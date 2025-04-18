@@ -33,12 +33,3 @@ def get_me(user=Depends(get_current_user)):
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(video_router, prefix="/api/v1/video", tags=["video"])
-
-# import asyncio
-# from app.core.parser import reset_captured_data, run_detection_on_video
-
-# video_file = "input.mp4"
-# prompt = "I'm in a room with 4 fuckers"
-
-# reset_captured_data()
-# asyncio.run(run_detection_on_video(video_file, prompt))
