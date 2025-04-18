@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv(dotenv_path=".env", override=True)
 
+
+
 class Settings(BaseSettings):
     CEREBRAS_API_KEY: str 
     SUPABASE_KEY: str 
