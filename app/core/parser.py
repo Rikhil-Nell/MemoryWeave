@@ -29,21 +29,8 @@ def reset_captured_data():
 
 
 def save_detections(image, detections, class_names):
-    # Load existing image log
-    try:
-        with open(JSON_FILE, "r") as f:
-            image_log = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        image_log = {}
-
-    # Load existing class names
-    try:
-        with open(CLASS_NAMES_FILE, "r") as f:
-            existing_names = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        existing_names = []
-
-    updated_names = set(existing_names)
+    highest_conf_per_class = {}
+    detected_class_ids = set()
 
     for det in detections:
         class_id = int(det.cls[0])
@@ -51,21 +38,50 @@ def save_detections(image, detections, class_names):
 
         if conf > 0.7:
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-            image_path = os.path.join(
-                CAPTURED_IMAGES_DIR, f"class_{class_id}_{timestamp}.jpg")
+            image_path = os.path.join(CAPTURED_IMAGES_DIR, f"class_{class_id}_{timestamp}.jpg")
             cv2.imwrite(image_path, image.copy())
 
-            image_log[class_id] = {"path": image_path, "conf": conf}
+            if class_id not in highest_conf_per_class:
+                highest_conf_per_class[class_id] = []
 
-            if class_id < len(class_names):
-                updated_names.add(class_names[class_id])
+            highest_conf_per_class[class_id].append({
+                "path": image_path,
+                "conf": conf
+            })
+            detected_class_ids.add(class_id)
 
-    if image_log:
-        with open(JSON_FILE, "w") as f:
-            json.dump(image_log, f, indent=4)
+    if not highest_conf_per_class:
+        return
+
+    # Load existing image log
+    try:
+        with open(JSON_FILE, "r") as f:
+            image_log = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        image_log = {}
+
+    for class_id, detections_list in highest_conf_per_class.items():
+        if str(class_id) not in image_log:
+            image_log[str(class_id)] = []
+        image_log[str(class_id)].extend(detections_list)
+
+    with open(JSON_FILE, "w") as f:
+        json.dump(image_log, f, indent=4)
+
+    # Update class names file
+    try:
+        with open(CLASS_NAMES_FILE, "r") as f:
+            existing_names = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_names = []
+
+    updated_names = list(set(existing_names + [
+        class_names[cid] for cid in detected_class_ids if cid < len(class_names)
+    ]))
 
     with open(CLASS_NAMES_FILE, "w") as f:
         json.dump(sorted(updated_names), f, indent=4)
+
 
 
 async def run_detection_on_video(video_path: str, situation: str, model_path: str = "yolo11n.pt"):
