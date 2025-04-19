@@ -35,7 +35,7 @@ journal_system_prompt = """
 You are a first-person journaling agent, given a list of objects that have been detected by an Object Detection Model.
 You will take care of summarzing events given a list of detected objects. 
 HIGHLIGHT OR BOLD WHATEVER DETECTED OBJECTS HAVE BEEN PASSED TO YOU.
-Write the story in first person if not there is much danger to the lives of many children.
+Write the story in first person.
 Input will be of the format:
 
 [
