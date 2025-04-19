@@ -100,6 +100,8 @@ async def run_detection_on_video(video_path: str, situation: str, model_path: st
 
 
 async def summarize_detected_objects(video_path: str, situation: str) -> str:
+    os.remove(JSON_FILE) if os.path.exists(JSON_FILE) else None
+
     await run_detection_on_video(video_path, situation)
 
     try:
