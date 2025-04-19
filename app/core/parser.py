@@ -3,7 +3,7 @@ import json
 import cv2
 from datetime import datetime
 from ultralytics import YOLO
-from agents import filter_agent, journal_agent
+from app.core.agents import filter_agent, journal_agent
 
 # Config Paths
 CAPTURED_IMAGES_DIR = "static/captured"
@@ -85,10 +85,11 @@ async def run_detection_on_video(video_path: str, situation: str, model_path: st
         if not ret:
             break
 
-        results = model.track(frame, conf=0.75, iou=0.65, classes=selected_indices, persist=True)
+        results = model.track(frame, conf=0.75, iou=0.65,
+                              classes=selected_indices, persist=True)
 
         annotated_frame = results[0].plot()
-        
+
         save_detections(annotated_frame, results[0].boxes, all_class_names)
 
     cap.release()
@@ -114,6 +115,6 @@ async def summarize_detected_objects(video_path: str, situation: str) -> str:
     return response
 
 if __name__ == "__main__":
-    
+
     reset_captured_data()
-    run_detection_on_video("input.mp4","I am in a room with my mates")
+    run_detection_on_video("input.mp4", "I am in a room with my mates")

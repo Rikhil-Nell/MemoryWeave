@@ -1,0 +1,1 @@
+person, chair, bed, laptop, cell phone, book, clock, refrigerator, toilet, backpack
