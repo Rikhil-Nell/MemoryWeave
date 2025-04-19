@@ -15,6 +15,8 @@ os.makedirs(CAPTURED_IMAGES_DIR, exist_ok=True)
 
 async def get_valid_classes(user_prompt: str) -> list:
     response = await filter_agent.run(user_prompt=user_prompt)
+    with open("class_names.txt", "w") as f:
+        f.write(response.output)
     return [word.strip().lower() for word in response.output.split(",")]
 
 
@@ -36,52 +38,40 @@ def save_detections(image, detections, class_names):
         class_id = int(det.cls[0])
         conf = float(det.conf[0])
 
-        if conf > 0.7:
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-            image_path = os.path.join(CAPTURED_IMAGES_DIR, f"class_{class_id}_{timestamp}.jpg")
-            cv2.imwrite(image_path, image.copy())
-
-            if class_id not in highest_conf_per_class:
-                highest_conf_per_class[class_id] = []
-
-            highest_conf_per_class[class_id].append({
-                "path": image_path,
-                "conf": conf
-            })
+        if conf > 0.7 and (class_id not in highest_conf_per_class or conf > highest_conf_per_class[class_id]["conf"]):
+            highest_conf_per_class[class_id] = {"conf": conf, "image": image.copy()}
             detected_class_ids.add(class_id)
 
     if not highest_conf_per_class:
         return
 
-    # Load existing image log
     try:
         with open(JSON_FILE, "r") as f:
             image_log = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         image_log = {}
 
-    for class_id, detections_list in highest_conf_per_class.items():
-        if str(class_id) not in image_log:
-            image_log[str(class_id)] = []
-        image_log[str(class_id)].extend(detections_list)
+    for class_id, data in highest_conf_per_class.items():
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+        image_path = os.path.join(CAPTURED_IMAGES_DIR, f"class_{class_id}_{timestamp}.jpg")
+        cv2.imwrite(image_path, data["image"])
+        image_log[class_id] = {"path": image_path, "conf": data["conf"]}
 
     with open(JSON_FILE, "w") as f:
         json.dump(image_log, f, indent=4)
 
     # Update class names file
+    new_names = [class_names[cid] for cid in detected_class_ids if cid < len(class_names)]
+
     try:
         with open(CLASS_NAMES_FILE, "r") as f:
             existing_names = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         existing_names = []
 
-    updated_names = list(set(existing_names + [
-        class_names[cid] for cid in detected_class_ids if cid < len(class_names)
-    ]))
-
+    updated_names = list(set(existing_names + new_names))
     with open(CLASS_NAMES_FILE, "w") as f:
-        json.dump(sorted(updated_names), f, indent=4)
-
+        json.dump(updated_names, f, indent=4)
 
 
 async def run_detection_on_video(video_path: str, situation: str, model_path: str = "yolo11n.pt"):
@@ -127,7 +117,10 @@ async def summarize_detected_objects(video_path: str, situation: str) -> str:
         return "No relevant objects found."
 
     object_list = ", ".join(detected_objects)
-    response = await journal_agent.run(user_prompt=object_list)
+    with open("class_names.txt", "r") as f:
+        event = f.read()
+    input = object_list + "\n" + event
+    response = await journal_agent.run(user_prompt=input)
     return response
 
 if __name__ == "__main__":
