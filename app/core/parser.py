@@ -92,8 +92,12 @@ async def run_detection_on_video(video_path: str, situation: str, model_path: st
         if not ret:
             break
 
-        results = model(frame, conf=0.75, iou=0.65, classes=selected_indices)
-        save_detections(frame, results[0].boxes, all_class_names)
+        results = model.track(frame, conf=0.75, iou=0.65, classes=selected_indices, persist=True)
+
+        annotated_frame = results[0].plot()
+        cv2.imshow("YOLOv8 Tracking", annotated_frame)
+        
+        save_detections(annotated_frame, results[0].boxes, all_class_names)
 
     cap.release()
     cv2.destroyAllWindows()
