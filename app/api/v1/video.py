@@ -38,7 +38,7 @@ async def upload_video(
 
         await push_images_to_supabase_and_log(timeline.data[0]["id"])
 
-        return {"filename": filename, "message": "story cooked successfully"}
+        return {"filename": filename, "message": "story cooked successfully", "timeline_id": timeline.data[0]["id"]}
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
